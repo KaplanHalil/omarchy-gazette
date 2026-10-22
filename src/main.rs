@@ -86,6 +86,9 @@ fn run() -> i32 {
         Cmd::Refresh => with_state(|config, store, _lock| {
             let report = feeds::refresh(config, store);
             config::save_config(config)?;
+            let valid: std::collections::HashSet<String> =
+                store.articles.iter().map(|a| a.id.clone()).collect();
+            let _ = texts::retain(&valid);
             serde_json::to_value(report).map_err(|e| e.to_string())
         }),
         Cmd::Markets => with_state(|config, store, _lock| {
