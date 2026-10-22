@@ -17,6 +17,7 @@ Tested on **Omarchy 4.0.6** with **Quickshell 0.3.2** and **Rust 1.99**.
 ### Markets above everything
 - Pinned ticker strip at the top of the panel: label, price, daily change, stale marker.
 - Optional compact ticker in the bar (choose which symbol it shows).
+  **Off by default** — the bar is just the RSS icon unless you enable it in Markets.
 - Defaults: **gram altın, USD/TRY, EUR/TRY, BIST 100**. Enable more from the presets or add any Yahoo symbol.
 - **No API keys.** Yahoo Finance is the primary source; TCMB and open.er-api.com are fallbacks for USD/TRY. Metals are converted locally:
   - gram altın = `XAU/USD × USD/TRY ÷ 31.1034768`

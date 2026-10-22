@@ -221,6 +221,7 @@ Item {
     RowLayout {
       Layout.fillWidth: true
       Layout.preferredHeight: Style.space(24)
+      visible: root.pulseSettings.bar_ticker !== false
       spacing: Style.space(4)
 
       Text {

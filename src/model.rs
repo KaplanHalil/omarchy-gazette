@@ -85,7 +85,7 @@ impl Default for Settings {
             thumbnails: true,
             show_excerpts: true,
             density: "comfortable".into(),
-            bar_ticker: true,
+            bar_ticker: false,
             bar_ticker_id: default_bar_ticker(),
             refresh_minutes: default_refresh_minutes(),
             market_refresh_seconds: default_market_seconds(),

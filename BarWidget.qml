@@ -5,21 +5,15 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 
-// Pulse bar widget: RSS icon with an unread dot and an optional market ticker.
-// All engine work lives in Panel.qml, which stays loaded even while hidden, so
-// the ticker and unread count keep updating when the panel is closed.
+// Pulse bar widget: RSS icon with an unread dot. All engine work lives in
+// Panel.qml, which stays loaded even while hidden, so the unread count and
+// market cache keep updating when the panel is closed.
 BarWidget {
   id: root
   moduleName: "io.github.kaplanhalil.pulse"
 
   readonly property var panel: panelLoader.item
   readonly property int unread: panel ? panel.unreadCount : 0
-  readonly property var ticker: panel ? panel.ticker : null
-  readonly property bool tickerVisible: !root.vertical
-    && panel !== null
-    && panel.pulseSettings.bar_ticker !== false
-    && ticker !== null
-    && ticker !== undefined
   readonly property color fg: bar ? bar.foreground : Commons.Color.foreground
   readonly property color accent: Commons.Color.accent
   readonly property color urgent: Commons.Color.urgent
@@ -86,52 +80,6 @@ BarWidget {
       }
     }
 
-    Text {
-      id: tickerText
-      visible: root.tickerVisible
-      anchors.verticalCenter: parent.verticalCenter
-      textFormat: Text.PlainText
-      text: {
-        if (!root.ticker) return ""
-        var label = String(root.ticker.label || "")
-        var price = String(root.ticker.priceText || "")
-        return label.length > 0 ? label + " " + price : price
-      }
-      color: root.ticker && root.ticker.stale ? Qt.rgba(root.fg.r, root.fg.g, root.fg.b, 0.55) : root.fg
-      font.family: Style.font.family
-      font.pixelSize: Style.font.caption
-      font.bold: false
-
-      MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.toggle()
-      }
-    }
-
-    // Tiny up/down marker keeps the bar compact while still carrying the
-    // direction of the day's move.
-    Text {
-      visible: root.tickerVisible && root.ticker
-      anchors.verticalCenter: parent.verticalCenter
-      textFormat: Text.PlainText
-      text: {
-        if (!root.ticker) return ""
-        var pct = Number(root.ticker.changePct || 0)
-        if (pct > 0.005) return "▲"
-        if (pct < -0.005) return "▼"
-        return "·"
-      }
-      color: {
-        if (!root.ticker) return root.fg
-        if (Number(root.ticker.changePct) > 0.005) return root.accent
-        if (Number(root.ticker.changePct) < -0.005) return root.urgent
-        return Qt.rgba(root.fg.r, root.fg.g, root.fg.b, 0.5)
-      }
-      font.family: Style.font.family
-      font.pixelSize: Style.font.caption
-    }
   }
 
   Loader {

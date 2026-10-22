@@ -489,8 +489,8 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: keyCatcher
-    contentWidth: keyboard.fittedContentWidth(Style.space(580), Style.space(660))
-    contentHeight: keyboard.fittedContentHeight(Style.space(720), Style.space(820))
+    contentWidth: keyboard.fittedContentWidth(Style.space(660), Style.space(720))
+    contentHeight: keyboard.fittedContentHeight(Style.space(860), Style.space(920))
 
     PanelKeyCatcher {
       id: keyCatcher
