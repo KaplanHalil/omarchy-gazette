@@ -1,10 +1,10 @@
 [package]
-name = "pulse-engine"
+name = "gazette-engine"
 version = "1.0.0"
 edition = "2021"
-description = "Local-first RSS/Atom engine with market data for the Omarchy Pulse bar widget"
+description = "Local-first RSS/Atom engine with market data for the Omarchy Gazette bar widget"
 license = "MIT"
-repository = "https://github.com/KaplanHalil/omarchy-pulse"
+repository = "https://github.com/KaplanHalil/omarchy-gazette"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

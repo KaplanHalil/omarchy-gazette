@@ -5,12 +5,12 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 
-// Pulse bar widget: RSS icon with an unread dot. All engine work lives in
+// Gazette bar widget: RSS icon with an unread dot. All engine work lives in
 // Panel.qml, which stays loaded even while hidden, so the unread count and
 // market cache keep updating when the panel is closed.
 BarWidget {
   id: root
-  moduleName: "io.github.kaplanhalil.pulse"
+  moduleName: "io.github.kaplanhalil.gazette"
 
   readonly property var panel: panelLoader.item
   readonly property int unread: panel ? panel.unreadCount : 0
@@ -57,7 +57,7 @@ BarWidget {
         foreground: root.fg
         tooltipText: root.unread > 0
           ? (root.unread + (root.unread === 1 ? " unread article" : " unread articles"))
-          : "Pulse — all caught up"
+          : "Gazette — all caught up"
         onPressed: function(button) {
           if (button === Qt.RightButton) {
             if (panel) panel.refreshFeeds()

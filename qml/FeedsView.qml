@@ -14,7 +14,7 @@ Item {
   property var panel: null
   property var feeds: []
   property var tabs: []
-  property var pulseSettings: ({})
+  property var gazetteSettings: ({})
 
   signal changed()
   signal refreshRequested()
@@ -24,7 +24,7 @@ Item {
   property string message: ""
   property bool messageIsError: false
   property string pendingDeleteId: ""
-  property string opmlPath: Quickshell.env("HOME") + "/pulse-subscriptions.opml"
+  property string opmlPath: Quickshell.env("HOME") + "/gazette-subscriptions.opml"
 
   readonly property color fg: Commons.Color.foreground
   readonly property color accent: Commons.Color.accent

@@ -226,6 +226,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "gazette-engine"
+version = "1.0.0"
+dependencies = [
+ "chrono",
+ "feed-rs",
+ "quick-xml 0.37.5",
+ "serde",
+ "serde_json",
+ "sha2",
+ "ureq",
+ "url",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -494,20 +508,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "pulse-engine"
-version = "1.0.0"
-dependencies = [
- "chrono",
- "feed-rs",
- "quick-xml 0.37.5",
- "serde",
- "serde_json",
- "sha2",
- "ureq",
- "url",
 ]
 
 [[package]]

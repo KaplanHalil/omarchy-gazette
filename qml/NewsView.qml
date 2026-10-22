@@ -12,7 +12,7 @@ Item {
   property var panel: null
   property var articles: []
   property var tabs: []
-  property var pulseSettings: ({})
+  property var gazetteSettings: ({})
   property string activeTab: "unread"
   property int unreadCount: 0
   property int totalCount: 0
@@ -36,7 +36,7 @@ Item {
   readonly property color dimmer: Qt.rgba(fg.r, fg.g, fg.b, 0.42)
   readonly property string fontFamily: Style.font.family
   readonly property bool searchFocused: searchField.activeFocus
-  readonly property bool compact: pulseSettings.density === "compact"
+  readonly property bool compact: gazetteSettings.density === "compact"
   readonly property int bookmarked: Number(panel && panel.stats ? panel.stats.bookmarked : 0)
   readonly property int maxRows: 100
 
@@ -47,7 +47,7 @@ Item {
         if (tabs[i].images === false) return false
       }
     }
-    return pulseSettings.show_images !== false
+    return gazetteSettings.show_images !== false
   }
 
   function focusSearch() {
@@ -234,7 +234,7 @@ Item {
             selected: index === root.cursor
             compact: root.compact
             showImages: root.imagesEnabled
-            showExcerpts: root.pulseSettings.show_excerpts !== false
+            showExcerpts: root.gazetteSettings.show_excerpts !== false
             onActivated: root.activateAt(index)
             onCursorEntered: root.cursorMoved(index)
             onBookmarkRequested: {

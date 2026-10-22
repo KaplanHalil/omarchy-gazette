@@ -1,6 +1,6 @@
 //! Persistent data model. Everything the engine stores on disk is defined here.
 //!
-//! Two files live in `$XDG_STATE_HOME/omarchy/pulse/`:
+//! Two files live in `$XDG_STATE_HOME/omarchy/gazette/`:
 //!   - `config.json`  user intent: feeds, tabs, markets, settings
 //!   - `state.json`   derived data: articles, read flags, market cache
 //!

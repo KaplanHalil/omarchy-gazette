@@ -196,7 +196,7 @@ pub fn refresh(config: &mut Config, store: &mut Store) -> RefreshReport {
                         feed: feed_names
                             .get(article.feed_id.as_str())
                             .copied()
-                            .unwrap_or("Pulse")
+                            .unwrap_or("Gazette")
                             .to_string(),
                     });
                     if pending.len() >= 5 {

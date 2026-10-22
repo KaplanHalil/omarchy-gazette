@@ -13,7 +13,7 @@ Item {
   property var panel: null
   property var markets: []
   property var catalog: []
-  property var pulseSettings: ({})
+  property var gazetteSettings: ({})
   property real marketUpdated: 0
 
   signal changed()
@@ -211,17 +211,17 @@ Item {
       }
 
       ToggleSwitch {
-        checked: root.pulseSettings.bar_ticker !== false
+        checked: root.gazetteSettings.bar_ticker !== false
         foreground: root.fg
         accent: root.accent
-        onToggled: root.panel.saveSettings({ bar_ticker: !(root.pulseSettings.bar_ticker !== false) })
+        onToggled: root.panel.saveSettings({ bar_ticker: !(root.gazetteSettings.bar_ticker !== false) })
       }
     }
 
     RowLayout {
       Layout.fillWidth: true
       Layout.preferredHeight: Style.space(24)
-      visible: root.pulseSettings.bar_ticker !== false
+      visible: root.gazetteSettings.bar_ticker !== false
       spacing: Style.space(4)
 
       Text {
@@ -242,11 +242,11 @@ Item {
           implicitWidth: barLabel.implicitWidth + Style.space(12)
           implicitHeight: Style.space(22)
           radius: Style.cornerRadius
-          color: root.pulseSettings.bar_ticker_id === modelData.id
+          color: root.gazetteSettings.bar_ticker_id === modelData.id
             ? Style.selectedFillFor(root.fg, root.accent)
             : (barMouse.containsMouse ? Style.hoverFillFor(root.fg, root.accent) : "transparent")
           borderSpec: Border.controlSpec(
-            root.pulseSettings.bar_ticker_id === modelData.id ? "selected" : "normal",
+            root.gazetteSettings.bar_ticker_id === modelData.id ? "selected" : "normal",
             root.fg, root.accent)
 
           Text {
@@ -254,7 +254,7 @@ Item {
             anchors.centerIn: parent
             textFormat: Text.PlainText
             text: String(modelData.label || modelData.id)
-            color: root.pulseSettings.bar_ticker_id === modelData.id ? root.accent : root.dim
+            color: root.gazetteSettings.bar_ticker_id === modelData.id ? root.accent : root.dim
             font.family: root.fontFamily
             font.pixelSize: Style.font.caption
           }

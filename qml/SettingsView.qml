@@ -10,7 +10,7 @@ Item {
   id: root
 
   property var panel: null
-  property var pulseSettings: ({})
+  property var gazetteSettings: ({})
   property var stats: ({})
   property var paths: ({})
   property string version: "1.0.0"
@@ -67,22 +67,22 @@ Item {
         width: parent.width
         label: "Article images"
         description: "Download thumbnails and show them in the list and reader"
-        checked: root.pulseSettings.show_images !== false
+        checked: root.gazetteSettings.show_images !== false
         foreground: root.fg
         accent: root.accent
         fontFamily: root.fontFamily
-        onClicked: root.save({ show_images: !(root.pulseSettings.show_images !== false) })
+        onClicked: root.save({ show_images: !(root.gazetteSettings.show_images !== false) })
       }
 
       Toggle {
         width: parent.width
         label: "Excerpts"
         description: "Two lines of the article summary under each headline"
-        checked: root.pulseSettings.show_excerpts !== false
+        checked: root.gazetteSettings.show_excerpts !== false
         foreground: root.fg
         accent: root.accent
         fontFamily: root.fontFamily
-        onClicked: root.save({ show_excerpts: !(root.pulseSettings.show_excerpts !== false) })
+        onClicked: root.save({ show_excerpts: !(root.gazetteSettings.show_excerpts !== false) })
       }
 
       RowLayout {
@@ -109,17 +109,17 @@ Item {
             implicitWidth: densityLabel.implicitWidth + Style.space(16)
             implicitHeight: Style.space(24)
             radius: Style.cornerRadius
-            color: root.pulseSettings.density === modelData.id
+            color: root.gazetteSettings.density === modelData.id
               ? Style.selectedFillFor(root.fg, root.accent)
               : (densityMouse.containsMouse ? Style.hoverFillFor(root.fg, root.accent) : "transparent")
-            borderSpec: Border.controlSpec(root.pulseSettings.density === modelData.id ? "selected" : "normal", root.fg, root.accent)
+            borderSpec: Border.controlSpec(root.gazetteSettings.density === modelData.id ? "selected" : "normal", root.fg, root.accent)
 
             Text {
               id: densityLabel
               anchors.centerIn: parent
               textFormat: Text.PlainText
               text: modelData.label
-              color: root.pulseSettings.density === modelData.id ? root.accent : root.dim
+              color: root.gazetteSettings.density === modelData.id ? root.accent : root.dim
               font.family: root.fontFamily
               font.pixelSize: Style.font.caption
             }
@@ -162,7 +162,7 @@ Item {
         TextField {
           id: refreshField
           implicitWidth: Style.space(64)
-          text: String(root.pulseSettings.refresh_minutes || 5)
+          text: String(root.gazetteSettings.refresh_minutes || 5)
           foreground: root.fg
           accent: root.accent
           font.pixelSize: Style.font.bodySmall
@@ -196,7 +196,7 @@ Item {
         TextField {
           id: marketField
           implicitWidth: Style.space(64)
-          text: String(root.pulseSettings.market_refresh_seconds || 60)
+          text: String(root.gazetteSettings.market_refresh_seconds || 60)
           foreground: root.fg
           accent: root.accent
           font.pixelSize: Style.font.bodySmall
@@ -227,11 +227,11 @@ Item {
         width: parent.width
         label: "Desktop notifications"
         description: "One notification per refresh when new unread articles arrive"
-        checked: root.pulseSettings.notifications !== false
+        checked: root.gazetteSettings.notifications !== false
         foreground: root.fg
         accent: root.accent
         fontFamily: root.fontFamily
-        onClicked: root.save({ notifications: !(root.pulseSettings.notifications !== false) })
+        onClicked: root.save({ notifications: !(root.gazetteSettings.notifications !== false) })
       }
 
       RowLayout {
@@ -250,7 +250,7 @@ Item {
         TextField {
           id: notifyField
           implicitWidth: Style.space(64)
-          text: String(root.pulseSettings.notify_min_interval_minutes || 30)
+          text: String(root.gazetteSettings.notify_min_interval_minutes || 30)
           foreground: root.fg
           accent: root.accent
           font.pixelSize: Style.font.bodySmall
@@ -276,7 +276,7 @@ Item {
         TextField {
           id: quietStartField
           implicitWidth: Style.space(58)
-          text: String(root.pulseSettings.quiet_start || "23:00")
+          text: String(root.gazetteSettings.quiet_start || "23:00")
           foreground: root.fg
           accent: root.accent
           font.pixelSize: Style.font.caption
@@ -296,7 +296,7 @@ Item {
         TextField {
           id: quietEndField
           implicitWidth: Style.space(58)
-          text: String(root.pulseSettings.quiet_end || "08:00")
+          text: String(root.gazetteSettings.quiet_end || "08:00")
           foreground: root.fg
           accent: root.accent
           font.pixelSize: Style.font.caption
@@ -410,7 +410,7 @@ Item {
           lines.push("config  " + String(root.paths.config || ""))
           lines.push("state   " + String(root.paths.state || ""))
           lines.push("images  " + String(root.paths.images || ""))
-          lines.push("Pulse " + root.version)
+          lines.push("Gazette " + root.version)
           return lines.join("\n")
         }
         color: root.dimmer

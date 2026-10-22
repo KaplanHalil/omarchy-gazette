@@ -12,7 +12,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 static TMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 pub const USER_AGENT: &str =
-    "Mozilla/5.0 (X11; Linux x86_64) Pulse/1.0 (+https://github.com/KaplanHalil/omarchy-pulse)";
+    "Mozilla/5.0 (X11; Linux x86_64) Gazette/1.0 (+https://github.com/KaplanHalil/omarchy-gazette)";
 pub const MAX_FEED_BYTES: usize = 6 * 1024 * 1024;
 pub const MAX_IMAGE_BYTES: usize = 3 * 1024 * 1024;
 
@@ -31,14 +31,14 @@ pub fn state_dir() -> PathBuf {
     let base = std::env::var("XDG_STATE_HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|_| home().join(".local/state"));
-    base.join("omarchy/pulse")
+    base.join("omarchy/gazette")
 }
 
 pub fn cache_dir() -> PathBuf {
     let base = std::env::var("XDG_CACHE_HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|_| home().join(".cache"));
-    base.join("omarchy/pulse/images")
+    base.join("omarchy/gazette/images")
 }
 
 /// Create a directory with 0700 permissions, verifying it is not a symlink.
@@ -275,7 +275,7 @@ impl LockGuard {
                         continue;
                     }
                     if std::time::Instant::now() >= deadline {
-                        return Err("another pulse-engine operation is running".into());
+                        return Err("another gazette-engine operation is running".into());
                     }
                     std::thread::sleep(Duration::from_millis(200));
                 }

@@ -1,4 +1,4 @@
-//! OPML 2.0 import/export. Categories become Pulse tabs.
+//! OPML 2.0 import/export. Categories become Gazette tabs.
 
 use crate::config::new_feed;
 use crate::model::{Config, TabCfg};
@@ -196,7 +196,7 @@ pub fn export(config: &Config) -> String {
         .filter(|f| !placed.contains(&f.id.as_str()))
         .collect();
     if !orphans.is_empty() {
-        body.push_str("    <outline text=\"Pulse\" title=\"Pulse\">\n");
+        body.push_str("    <outline text=\"Gazette\" title=\"Gazette\">\n");
         for feed in orphans {
             body.push_str(&feed_outline(feed, 6));
         }
@@ -204,7 +204,7 @@ pub fn export(config: &Config) -> String {
     }
 
     format!(
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<opml version=\"2.0\">\n  <head>\n    <title>Pulse subscriptions</title>\n  </head>\n  <body>\n{}</body>\n</opml>\n",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<opml version=\"2.0\">\n  <head>\n    <title>Gazette subscriptions</title>\n  </head>\n  <body>\n{}</body>\n</opml>\n",
         body
     )
 }

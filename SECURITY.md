@@ -1,13 +1,13 @@
 # Security
 
-Pulse runs entirely on your machine. It has no server, no account and no
+Gazette runs entirely on your machine. It has no server, no account and no
 telemetry.
 
 ## Data
 
-- `~/.local/state/omarchy/pulse/config.json` and `state.json` are written
+- `~/.local/state/omarchy/gazette/config.json` and `state.json` are written
   atomically with mode `0600`; the parent directory is `0700`.
-- Cached images live in `~/.cache/omarchy/pulse/images/` and are pruned at
+- Cached images live in `~/.cache/omarchy/gazette/images/` and are pruned at
   200 MB. They are identified by magic bytes; SVG is rejected.
 - The panel renders feed content as `Text.PlainText`. Feed HTML is reduced to
   text by the engine before it reaches QML.
@@ -31,5 +31,5 @@ may be requested.
 ## Reporting
 
 Open a private security advisory on
-<https://github.com/KaplanHalil/omarchy-pulse/security/advisories/new> or email
+<https://github.com/KaplanHalil/omarchy-gazette/security/advisories/new> or email
 the address on the GitHub profile.

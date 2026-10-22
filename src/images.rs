@@ -1,7 +1,7 @@
 //! Article image extraction and local cache.
 //!
 //! Images are downloaded only from http(s), sniffed by magic bytes, capped at
-//! 3 MiB, and stored 0600 under `$XDG_CACHE_HOME/omarchy/pulse/images`.
+//! 3 MiB, and stored 0600 under `$XDG_CACHE_HOME/omarchy/gazette/images`.
 //! Filenames are content-URL hashes so the same image is shared across feeds.
 
 use crate::util::{

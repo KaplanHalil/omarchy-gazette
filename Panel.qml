@@ -8,14 +8,14 @@ import qs.Commons as Commons
 import qs.Ui
 import "qml"
 
-// Pulse panel: markets ticker, custom tabs, article list with thumbnails,
+// Gazette panel: markets ticker, custom tabs, article list with thumbnails,
 // in-panel reader, feed/tab/market/settings management.
 //
 // Engine access is serialised through one Process queue so a manual refresh,
 // the background timer and a settings write can never overlap.
 Panel {
   id: root
-  moduleName: "io.github.kaplanhalil.pulse"
+  moduleName: "io.github.kaplanhalil.gazette"
   ipcTarget: ""
   manageIpc: false
 
@@ -44,7 +44,7 @@ Panel {
   property var _queue: []
   property var _callback: null
 
-  readonly property var pulseSettings: snapshot.settings || ({})
+  readonly property var gazetteSettings: snapshot.settings || ({})
   readonly property var allArticles: snapshot.articles || []
   readonly property var tabs: snapshot.tabs || []
   readonly property var feeds: snapshot.feeds || []
@@ -62,11 +62,11 @@ Panel {
   readonly property int totalCount: Number(stats.total || 0)
   readonly property var ticker: snapshot.barTicker || null
   readonly property string enginePath: {
-    var custom = Quickshell.env("PULSE_ENGINE")
+    var custom = Quickshell.env("GAZETTE_ENGINE")
     if (custom && custom.length > 0) return custom
-    return Quickshell.env("HOME") + "/.local/bin/pulse-engine"
+    return Quickshell.env("HOME") + "/.local/bin/gazette-engine"
   }
-  readonly property int intervalSeconds: Math.max(60, (Number(pulseSettings.refresh_minutes) || 5) * 60)
+  readonly property int intervalSeconds: Math.max(60, (Number(gazetteSettings.refresh_minutes) || 5) * 60)
   readonly property var panelScreen: anchorItem && anchorItem.QsWindow ? anchorItem.QsWindow.window.screen : null
   readonly property bool primaryInstance: panelScreen === null
     || !Quickshell.screens
@@ -190,10 +190,10 @@ Panel {
       }
       notifyProc.command = [
         "notify-send",
-        "-a", "Pulse",
-        "-h", "string:x-canonical-private-synchronous:pulse",
+        "-a", "Gazette",
+        "-h", "string:x-canonical-private-synchronous:gazette",
         "-u", "normal",
-        "Pulse — " + summary,
+        "Gazette — " + summary,
         lines.join("\n")
       ]
       notifyProc.running = true
@@ -241,11 +241,11 @@ Panel {
   }
 
   Timer {
-    interval: Math.max(20, Number(root.pulseSettings.market_refresh_seconds) || 60) * 1000
+    interval: Math.max(20, Number(root.gazetteSettings.market_refresh_seconds) || 60) * 1000
     repeat: true
     running: root.opened
     onTriggered: {
-      var maxAge = Math.max(15, (Number(root.pulseSettings.market_refresh_seconds) || 60) - 15)
+      var maxAge = Math.max(15, (Number(root.gazetteSettings.market_refresh_seconds) || 60) - 15)
       if (Date.now() / 1000 - Number(root.snapshot.marketUpdated || 0) > maxAge) root.refreshMarkets()
     }
   }
@@ -467,14 +467,14 @@ Panel {
     if (view === "tabs") return "Tabs"
     if (view === "markets") return "Markets"
     if (view === "settings") return "Settings"
-    return "Pulse"
+    return "Gazette"
   }
 
   readonly property string metaLine: {
     if (view === "feeds") return feeds.length + " FEEDS · " + stats.errors + " ERRORS"
     if (view === "tabs") return tabs.length + " TABS · " + unreadCount + " UNREAD"
     if (view === "markets") return enabledMarkets.length + " TICKERS · " + (snapshot.marketUpdated ? "LIVE" : "NO DATA")
-    if (view === "settings") return "PULSE " + String(snapshot.version || "1.0.0")
+    if (view === "settings") return "GAZETTE " + String(snapshot.version || "1.0.0")
     if (view === "reader") {
       var a = selectedArticle()
       return a ? String(a.feedTitle || "FEED").toUpperCase() : "ARTICLE"
@@ -652,7 +652,7 @@ Panel {
             panel: root
             articles: root.filteredArticles()
             tabs: root.tabs
-            pulseSettings: root.pulseSettings
+            gazetteSettings: root.gazetteSettings
             activeTab: root.activeTab
             unreadCount: root.unreadCount
             totalCount: root.totalCount
@@ -682,7 +682,7 @@ Panel {
             visible: root.view === "reader"
             article: root.selectedArticle()
             panel: root
-            showImages: root.pulseSettings.show_images !== false
+            showImages: root.gazetteSettings.show_images !== false
             onBackRequested: root.view = "news"
             onOpenExternalRequested: function(article) { root.openExternal(article) }
             onToggleBookmarkRequested: function(article) { root.toggleBookmarkSelected() }
@@ -698,7 +698,7 @@ Panel {
             panel: root
             feeds: root.feeds
             tabs: root.tabs
-            pulseSettings: root.pulseSettings
+            gazetteSettings: root.gazetteSettings
             onChanged: root.reload()
             onRefreshRequested: root.refreshFeeds()
           }
@@ -710,7 +710,7 @@ Panel {
             panel: root
             tabs: root.tabs
             feeds: root.feeds
-            pulseSettings: root.pulseSettings
+            gazetteSettings: root.gazetteSettings
             onChanged: root.reload()
           }
 
@@ -721,7 +721,7 @@ Panel {
             panel: root
             markets: root.allMarkets
             catalog: root.marketCatalog
-            pulseSettings: root.pulseSettings
+            gazetteSettings: root.gazetteSettings
             marketUpdated: Number(root.snapshot.marketUpdated || 0)
             onChanged: root.reload()
             onRefreshRequested: root.refreshMarkets()
@@ -732,7 +732,7 @@ Panel {
             anchors.fill: parent
             visible: root.view === "settings"
             panel: root
-            pulseSettings: root.pulseSettings
+            gazetteSettings: root.gazetteSettings
             stats: root.stats
             paths: root.snapshot.paths || ({})
             version: String(root.snapshot.version || "1.0.0")

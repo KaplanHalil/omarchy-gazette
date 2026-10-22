@@ -13,7 +13,7 @@ Item {
   property var panel: null
   property var tabs: []
   property var feeds: []
-  property var pulseSettings: ({})
+  property var gazetteSettings: ({})
 
   signal changed()
 

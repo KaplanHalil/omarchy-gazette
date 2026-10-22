@@ -1,4 +1,4 @@
-//! `pulse-engine` — local-first RSS/Atom + markets backend for Pulse.
+//! `gazette-engine` — local-first RSS/Atom + markets backend for Gazette.
 //!
 //! Every command prints JSON on stdout (except `--status`/`--help`), so the
 //! Quickshell UI can call one binary and parse the result.
@@ -71,7 +71,7 @@ fn run() -> i32 {
             return 0;
         }
         Cmd::Version => {
-            println!("Pulse {} ({})", model::VERSION, "engine");
+            println!("Gazette {} ({})", model::VERSION, "engine");
             return 0;
         }
         Cmd::Status => return status(&opts),
@@ -277,7 +277,7 @@ fn run() -> i32 {
         Cmd::ExportOpml(path) => (|| {
             let config = config::load_config();
             let target = if path.trim().is_empty() {
-                home().join("pulse-subscriptions.opml")
+                home().join("gazette-subscriptions.opml")
             } else {
                 std::path::PathBuf::from(path)
             };
@@ -459,7 +459,7 @@ fn status(opts: &Opts) -> i32 {
         );
     } else {
         println!(
-            "Pulse {} — unread {}, articles {}, feeds {}, tabs {}",
+            "Gazette {} — unread {}, articles {}, feeds {}, tabs {}",
             model::VERSION,
             unread,
             store.articles.len(),
@@ -593,7 +593,7 @@ fn parse_args() -> Result<Opts, String> {
         opts.command = Cmd::AddFeed(add_url.unwrap_or_default());
     }
     if opts.command == Cmd::Help && !args.is_empty() {
-        return Err("unknown arguments; run pulse-engine --help".into());
+        return Err("unknown arguments; run gazette-engine --help".into());
     }
     Ok(opts)
 }
@@ -607,34 +607,34 @@ fn require(args: &[String], index: usize, flag: &str) -> Result<String, String> 
 fn print_help() {
     println!(
         "\
-Pulse engine {}
+Gazette engine {}
 
 Usage:
-  pulse-engine --snapshot                 Full JSON snapshot for the UI
-  pulse-engine --refresh                  Fetch all enabled feeds
-  pulse-engine --markets                  Refresh market quotes
-  pulse-engine --status [--json]          Human summary
-  pulse-engine --mark-read <id>
-  pulse-engine --mark-unread <id>
-  pulse-engine --mark-all-read [--tab <id>]
-  pulse-engine --bookmark <id> <0|1>
-  pulse-engine --image <article-id>       Cache one article image
-  pulse-engine --add-feed <url> [--title <name>] [--tabs a,b]
-  pulse-engine --remove-feed <id>
-  pulse-engine --toggle-feed <id>
-  pulse-engine --save-tab '<json>'
-  pulse-engine --delete-tab <id>
-  pulse-engine --save-settings '<json>'
-  pulse-engine --save-markets '<json>'
-  pulse-engine --import-opml <path>
-  pulse-engine --export-opml [path]
-  pulse-engine --seed-starter
-  pulse-engine --ack-notifications
-  pulse-engine --clean
-  pulse-engine --version
+  gazette-engine --snapshot                 Full JSON snapshot for the UI
+  gazette-engine --refresh                  Fetch all enabled feeds
+  gazette-engine --markets                  Refresh market quotes
+  gazette-engine --status [--json]          Human summary
+  gazette-engine --mark-read <id>
+  gazette-engine --mark-unread <id>
+  gazette-engine --mark-all-read [--tab <id>]
+  gazette-engine --bookmark <id> <0|1>
+  gazette-engine --image <article-id>       Cache one article image
+  gazette-engine --add-feed <url> [--title <name>] [--tabs a,b]
+  gazette-engine --remove-feed <id>
+  gazette-engine --toggle-feed <id>
+  gazette-engine --save-tab '<json>'
+  gazette-engine --delete-tab <id>
+  gazette-engine --save-settings '<json>'
+  gazette-engine --save-markets '<json>'
+  gazette-engine --import-opml <path>
+  gazette-engine --export-opml [path]
+  gazette-engine --seed-starter
+  gazette-engine --ack-notifications
+  gazette-engine --clean
+  gazette-engine --version
 
-State lives in ~/.local/state/omarchy/pulse; images in
-~/.cache/omarchy/pulse/images.",
+State lives in ~/.local/state/omarchy/gazette; images in
+~/.cache/omarchy/gazette/images.",
         model::VERSION
     );
 }

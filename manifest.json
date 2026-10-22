@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "io.github.kaplanhalil.pulse",
-  "name": "Pulse",
+  "id": "io.github.kaplanhalil.gazette",
+  "name": "Gazette",
   "version": "1.0.0",
   "author": "Halil Kaplan",
   "license": "MIT",
@@ -14,7 +14,7 @@
     "barWidget": "BarWidget.qml"
   },
   "barWidget": {
-    "displayName": "Pulse",
+    "displayName": "Gazette",
     "description": "Markets ticker plus an RSS reader with custom tabs, thumbnails and notifications.",
     "category": "News",
     "defaultSection": "right",
@@ -24,7 +24,7 @@
       "feeds",
       "reader",
       "markets",
-      "pulse"
+      "gazette"
     ],
     "allowMultiple": false
   },
