@@ -254,9 +254,15 @@ pub struct LockGuard {
 
 impl LockGuard {
     pub fn acquire() -> Result<LockGuard, String> {
+        Self::acquire_named("engine")
+    }
+
+    /// Independent lock file for a subsystem (e.g. the full-text cache) so it
+    /// never waits behind a feed refresh.
+    pub fn acquire_named(name: &str) -> Result<LockGuard, String> {
         let dir = state_dir();
         ensure_dir(&dir)?;
-        let path = dir.join("engine.lock");
+        let path = dir.join(format!("{}.lock", name));
         let pid = std::process::id();
         let deadline = std::time::Instant::now() + Duration::from_secs(10);
 

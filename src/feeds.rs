@@ -154,8 +154,6 @@ pub fn refresh(config: &mut Config, store: &mut Store) -> RefreshReport {
                 image_path: String::new(),
                 read: false,
                 bookmarked: false,
-                full_text: String::new(),
-                full_text_at: 0,
             };
             index.insert(article.id.clone(), store.articles.len());
             new_articles.push(article);

@@ -189,10 +189,11 @@ All commands print JSON (`{"ok":true,…}` or `{"ok":false,"error":"…"}`) exce
 | --- | --- |
 | Feeds, tabs, tickers, settings | `~/.local/state/omarchy/gazette/config.json` |
 | Articles, read flags, quote cache | `~/.local/state/omarchy/gazette/state.json` |
+| Full article bodies | `~/.local/state/omarchy/gazette/texts/` |
 | Images | `~/.cache/omarchy/gazette/images/` |
 | Engine binary | `~/.local/bin/gazette-engine` |
 
-Both files are written atomically with mode `0600`; the directories are `0700`. The panel never renders feed HTML — the engine strips it to plain text.
+Config and state are written atomically with mode `0600`; directories are `0700`. Full article bodies are one `0600` file per article, so a text fetch never rewrites the whole state. The panel never renders feed HTML — the engine strips it to plain text.
 
 A tab in `config.json`:
 
@@ -217,13 +218,13 @@ A tab in `config.json`:
 
 - State stays on the machine. No analytics, no accounts, no cloud service.
 - Feed and article HTML is reduced to plain text before it reaches QML; every dynamic `Text` uses `Text.PlainText`.
-- Full article pages are fetched **only when you open an article**, only when the setting is enabled, capped at 2 MB, and cached locally. No JavaScript is executed.
+- Full article pages are fetched **only when you open an article**, only when the setting is enabled, capped at 2 MB, and cached locally in `~/.local/state/omarchy/gazette/texts/` (mode `0600`). No JavaScript is executed.
 - HTTP(S) only, hard byte caps (6 MB feeds, 3 MB images, 768 KB for `og:image` pages), connect/read timeouts, no `data:` or `file:` fetches.
 - Images are identified by magic bytes, not by the server's `Content-Type`, and SVG is rejected.
 - Symlinked state/cache paths are refused; temp files are renamed into place.
 - `notify-send` is the only external process besides `gazette-engine`, and it is only used for the summary you enabled.
 
-Third-party endpoints: Yahoo Finance, TCMB, open.er-api.com, plus your own feeds and (optionally) their article pages for `og:image`. Yahoo's chart endpoint is undocumented and can change; quotes fall back to the last cached value and are marked stale.
+Third-party endpoints: Yahoo Finance, TCMB, open.er-api.com, plus your own feeds and (optionally) their article pages for `og:image` and full text. Yahoo's chart endpoint is undocumented and can change; quotes fall back to the last cached value and are marked stale.
 
 ---
 
@@ -234,6 +235,8 @@ Third-party endpoints: Yahoo Finance, TCMB, open.er-api.com, plus your own feeds
 **Some feeds show TLS/connection errors** — a few publishers reset connections from VPNs/datacenters. Gazette keeps the feed and retries on the next refresh. Errors are listed in **Feeds**.
 
 **No images for a feed** — the feed carries none and its article pages block `og:image` scraping. The text still renders.
+
+**“Full text unavailable”** — the publisher returned a paywall, `HTTP 405`, or a page with no readable paragraphs. Gazette shows the feed summary and a **RETRY** button; you can still open the article in the browser.
 
 **“another gazette-engine operation is running”** — a refresh is in flight (or a stale lock is younger than five minutes). Wait for it to finish.
 

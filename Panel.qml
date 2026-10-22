@@ -47,6 +47,9 @@ Panel {
   property var articleTexts: ({})
   property string articleTextLoading: ""
   property string articleTextError: ""
+  property bool _textRunning: false
+  property var _textCallback: null
+  property var _textPending: null
 
   readonly property var gazetteSettings: snapshot.settings || ({})
   readonly property var allArticles: snapshot.articles || []
@@ -138,6 +141,51 @@ Panel {
 
   Process {
     id: notifyProc
+  }
+
+  // Full article text runs on its own Process and its own cache file, so it
+  // never queues behind a feed refresh.
+  Process {
+    id: textProc
+    stdout: StdioCollector { id: textOut; waitForEnd: true }
+    stderr: StdioCollector { id: textErr; waitForEnd: true }
+
+    onExited: function(code, status) {
+      var text = textOut.text || ""
+      var errText = textErr.text || ""
+      var parsed = null
+      try { parsed = JSON.parse(text) } catch (e) { parsed = null }
+      var message = ""
+      if (code !== 0 || !parsed || parsed.ok === false) {
+        if (parsed && parsed.error) message = String(parsed.error)
+        else if (errText.trim().length > 0) message = errText.trim()
+        else message = "could not fetch the full article"
+      }
+      var cb = root._textCallback
+      root._textCallback = null
+      root._textRunning = false
+      if (cb) cb(parsed, code, message)
+      if (root._textPending) {
+        var pending = root._textPending
+        root._textPending = null
+        root.startTextCommand(pending.args, pending.callback)
+      }
+    }
+  }
+
+  function runTextCommand(args, callback) {
+    if (_textRunning) {
+      _textPending = { args: args, callback: callback }
+      return
+    }
+    startTextCommand(args, callback)
+  }
+
+  function startTextCommand(args, callback) {
+    _textRunning = true
+    _textCallback = callback
+    textProc.command = [enginePath].concat(args)
+    textProc.running = true
   }
 
   function reload(callback) {
@@ -457,7 +505,7 @@ Panel {
     articleTextLoading = article.id
     articleTextError = ""
     var command = force ? "--refresh-text" : "--article-text"
-    runCommand([command, article.id], function(result, code, errorText) {
+    runTextCommand([command, article.id], function(result, code, errorText) {
       if (root.articleTextLoading === article.id) root.articleTextLoading = ""
       if (!result || result.ok === false) {
         if (root.selectedId === article.id) {
@@ -469,7 +517,7 @@ Panel {
       for (var key in root.articleTexts) next[key] = root.articleTexts[key]
       next[article.id] = String(result.text || "")
       root.articleTexts = next
-    }, true)
+    })
   }
 
   function openExternal(article) {

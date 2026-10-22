@@ -11,6 +11,7 @@ mod markets;
 mod model;
 mod opml;
 mod snapshot;
+mod texts;
 mod util;
 
 use crate::model::{Config, MarketCfg, Pending, Settings, Store, TabCfg};
@@ -153,6 +154,9 @@ fn run() -> i32 {
                 tab.feeds.retain(|f| f != &id);
             }
             store.articles.retain(|a| a.feed_id != id);
+            let valid: std::collections::HashSet<String> =
+                store.articles.iter().map(|a| a.id.clone()).collect();
+            let _ = texts::retain(&valid);
             config::normalize_config(config);
             config::save_config(config)?;
             config::save_store(store)?;
@@ -308,17 +312,7 @@ fn run() -> i32 {
             config::save_store(store)?;
             Ok(serde_json::json!({"ok": true, "path": path}))
         }),
-        Cmd::ArticleText(id, force) => with_state(|_config, store, _lock| {
-            let (text, cached) = article::ensure_text(store, &id, force)?;
-            config::save_store(store)?;
-            Ok(serde_json::json!({
-                "ok": true,
-                "id": id,
-                "text": text,
-                "chars": text.chars().count(),
-                "cached": cached,
-            }))
-        }),
+        Cmd::ArticleText(id, force) => article_text_command(&id, force),
         Cmd::Clean => with_state(|config, store, _lock| {
             let referenced: std::collections::HashSet<String> = store
                 .articles
@@ -330,6 +324,9 @@ fn run() -> i32 {
             store
                 .articles
                 .retain(|a| a.bookmarked || now() - a.published < 60 * 86_400 || !a.read);
+            let valid: std::collections::HashSet<String> =
+                store.articles.iter().map(|a| a.id.clone()).collect();
+            let _ = texts::retain(&valid);
             config::save_store(store)?;
             Ok(
                 serde_json::json!({"ok": true, "articles": store.articles.len(), "feeds": config.feeds.len()}),
@@ -360,6 +357,37 @@ fn fail(error: &str) -> i32 {
         serde_json::json!({"ok": false, "error": error})
     );
     1
+}
+
+fn article_text_command(id: &str, force: bool) -> Result<serde_json::Value, String> {
+    if !force {
+        if let Some(text) = texts::get(id) {
+            return Ok(serde_json::json!({
+                "ok": true,
+                "id": id,
+                "text": text,
+                "chars": text.chars().count(),
+                "cached": true,
+            }));
+        }
+    }
+    let store = config::load_store();
+    let url = store
+        .articles
+        .iter()
+        .find(|a| a.id == id)
+        .map(|a| a.url.clone())
+        .ok_or_else(|| "article not found".to_string())?;
+    let text = article::fetch(&url)?;
+    let stored = texts::put(id, &text).is_ok();
+    Ok(serde_json::json!({
+        "ok": true,
+        "id": id,
+        "text": text,
+        "chars": text.chars().count(),
+        "cached": false,
+        "stored": stored,
+    }))
 }
 
 fn find_article<'a>(store: &'a mut Store, id: &str) -> Result<&'a mut model::Article, String> {

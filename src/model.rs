@@ -341,10 +341,6 @@ pub struct Article {
     pub image_path: String,
     pub read: bool,
     pub bookmarked: bool,
-    #[serde(default)]
-    pub full_text: String,
-    #[serde(default)]
-    pub full_text_at: i64,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]

@@ -30,29 +30,6 @@ pub fn fetch(url: &str) -> Result<String, String> {
     Ok(text)
 }
 
-/// Store the extracted text on the article. Returns `(text, cached)`.
-pub fn ensure_text(
-    store: &mut crate::model::Store,
-    id: &str,
-    force: bool,
-) -> Result<(String, bool), String> {
-    let position = store
-        .articles
-        .iter()
-        .position(|a| a.id == id)
-        .ok_or_else(|| "article not found".to_string())?;
-    if !force && !store.articles[position].full_text.is_empty() {
-        return Ok((store.articles[position].full_text.clone(), true));
-    }
-
-    let url = store.articles[position].url.clone();
-    let text = fetch(&url)?;
-    let article = &mut store.articles[position];
-    article.full_text = text.clone();
-    article.full_text_at = crate::util::now();
-    Ok((text, false))
-}
-
 pub fn extract(html: &str) -> String {
     if let Some(body) = json_ld_article_body(html) {
         let clean = clean_json_body(&body);
