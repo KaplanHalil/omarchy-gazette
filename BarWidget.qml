@@ -110,6 +110,12 @@ BarWidget {
     function tabs(): void { if (panel) panel.openView("tabs") }
     function markets(): void { if (panel) panel.openView("markets") }
     function news(): void { if (panel) panel.openView("news") }
+    function tab(id: string): void {
+      if (!panel) return
+      panel.activeTab = id
+      panel.cursor = 0
+      panel.openView("news")
+    }
     function detail(id: string): void {
       if (!panel) return
       panel.openView("news")
