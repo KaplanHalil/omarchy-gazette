@@ -262,7 +262,7 @@ install.sh           cargo build + install engine
 ```
 
 ```bash
-cargo test                 # 29 parser/market/article/OPML/text tests
+cargo test                 # 30 parser/market/article/OPML/text tests
 cargo build --release
 omarchy plugin validate .
 ```

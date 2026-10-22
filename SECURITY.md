@@ -19,6 +19,8 @@ telemetry.
   every request has connect/read timeouts.
 - `og:image` lookups happen only when a feed provides no image, and only for a
   handful of the newest articles per refresh.
+- Full article pages and their inline photos are fetched only after you click
+  **READ FULL TEXT**, never when the panel opens.
 - Turning images off stops article-page and image fetching entirely.
 
 ## External endpoints
