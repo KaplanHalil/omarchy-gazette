@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test engine
+        run: cargo test --locked
+      - name: Build release
+        run: cargo build --release --locked
+
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate manifest and entry points
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          manifest = json.load(open("manifest.json"))
+          required = ["schemaVersion", "id", "name", "version", "author", "license", "description", "kinds", "entryPoints"]
+          missing = [key for key in required if key not in manifest]
+          if missing:
+              sys.exit(f"missing manifest fields: {missing}")
+          if "bar-widget" not in manifest["kinds"]:
+              sys.exit("manifest must declare the bar-widget kind")
+          if manifest.get("barWidget", {}).get("defaultSection") not in ("left", "center", "right"):
+              sys.exit("barWidget.defaultSection must be left, center or right")
+          entry = manifest["entryPoints"].get("barWidget")
+          if not entry or not os.path.isfile(entry):
+              sys.exit(f"barWidget entry point is missing: {entry}")
+          print("manifest ok")
+          PY

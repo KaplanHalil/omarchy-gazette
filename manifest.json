@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.kaplanhalil.pulse",
+  "name": "Pulse",
+  "version": "1.0.0",
+  "author": "Halil Kaplan",
+  "license": "MIT",
+  "description": "Local-first RSS/Atom reader with a live markets ticker, custom tabs, article thumbnails and an in-panel reader for Omarchy.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "activation": "on-demand",
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Pulse",
+    "description": "Markets ticker plus an RSS reader with custom tabs, thumbnails and notifications.",
+    "category": "News",
+    "defaultSection": "right",
+    "aliases": [
+      "rss",
+      "news",
+      "feeds",
+      "reader",
+      "markets",
+      "pulse"
+    ],
+    "allowMultiple": false
+  },
+  "verified": false
+}
