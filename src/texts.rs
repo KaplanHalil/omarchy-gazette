@@ -36,6 +36,10 @@ fn file_for(id: &str) -> PathBuf {
 pub fn get(id: &str) -> Option<CachedText> {
     let raw = fs::read_to_string(file_for(id)).ok()?;
     let mut cached: CachedText = serde_json::from_str(&raw).ok()?;
+    if cached.v < 3 {
+        let _ = fs::remove_file(file_for(id));
+        return None;
+    }
     if cached.blocks.is_empty() && !cached.text.trim().is_empty() {
         cached.blocks.push(Block::text(cached.text.clone()));
     }

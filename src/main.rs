@@ -388,7 +388,7 @@ fn article_text_command(id: &str, force: bool) -> Result<serde_json::Value, Stri
     let text = extraction.text;
     let blocks = extraction.blocks;
     let cached = texts::CachedText {
-        v: 2,
+        v: 3,
         text: text.clone(),
         blocks: blocks.clone(),
     };

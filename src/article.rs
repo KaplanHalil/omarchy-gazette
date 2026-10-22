@@ -264,13 +264,7 @@ fn collect_images(html: &str, base_url: &str, exclude_image: &str) -> Vec<(usize
                     )
                 {
                     let caption = figure_caption(html, &lower, start)
-                        .or_else(|| attr_value(tag, "alt"))
-                        .map(|value| {
-                            truncate_chars(
-                                &collapse_whitespace(&strip_html(&value)),
-                                MAX_CAPTION_CHARS,
-                            )
-                        })
+                        .or_else(|| attr_value(tag, "alt").and_then(|value| caption_text(&value)))
                         .unwrap_or_default();
                     out.push((start, Block::image(url, caption)));
                     if out.len() >= MAX_IMAGES {
@@ -359,6 +353,30 @@ fn plausible_image(url: &str) -> bool {
     .any(|needle| lower.contains(needle))
 }
 
+fn caption_text(value: &str) -> Option<String> {
+    // Alt text is often entity-escaped HTML. Two passes handle both
+    // `&lt;em&gt;` and the double-encoded `&amp;lt;em&amp;gt;` variants.
+    let text = collapse_whitespace(&strip_html(&strip_html(value)));
+    if text.chars().count() < 3 {
+        return None;
+    }
+    let lower = text.to_ascii_lowercase();
+    if [".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"]
+        .iter()
+        .any(|suffix| lower.ends_with(suffix))
+    {
+        return None;
+    }
+    let words: Vec<&str> = text.split_whitespace().collect();
+    if words.len() <= 2 && text.contains('_') {
+        return None;
+    }
+    if words.len() == 1 && text.chars().filter(|c| c.is_ascii_digit()).count() > 2 {
+        return None;
+    }
+    Some(truncate_chars(&text, MAX_CAPTION_CHARS))
+}
+
 fn figure_caption(html: &str, lower: &str, image_start: usize) -> Option<String> {
     let before = &lower[..image_start];
     let figure_start = before.rfind("<figure")?;
@@ -378,12 +396,7 @@ fn figure_caption(html: &str, lower: &str, image_start: usize) -> Option<String>
         .find("</figcaption")
         .map(|pos| open_end + pos)
         .unwrap_or(scope.len());
-    let text = collapse_whitespace(&strip_html(&scope[open_end..close]));
-    if text.is_empty() {
-        None
-    } else {
-        Some(truncate_chars(&text, MAX_CAPTION_CHARS))
-    }
+    caption_text(&scope[open_end..close])
 }
 
 // ----------------------------------------------------------------------- text
@@ -519,6 +532,9 @@ fn accept_block(text: &str, heading: bool) -> bool {
         "advertise with",
         "jobs at",
         "about us",
+        "if you buy something",
+        "we may earn",
+        "our collective reviews",
         "published",
         "updated",
     ];
@@ -945,6 +961,16 @@ mod tests {
             .position(|block| block.kind == "text")
             .unwrap();
         assert!(image_index > text_index);
+    }
+
+    #[test]
+    fn cleans_escaped_captions_and_filenames() {
+        assert_eq!(
+            caption_text("&lt;em&gt;A clean caption&lt;/em&gt;").as_deref(),
+            Some("A clean caption")
+        );
+        assert_eq!(caption_text("268755_Googlebooks_ADiBenedetto.jpg"), None);
+        assert_eq!(caption_text("1234567"), None);
     }
 
     #[test]
