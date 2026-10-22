@@ -88,7 +88,7 @@ Item {
       Toggle {
         width: parent.width
         label: "Full article text"
-        description: "Fetch the article page and extract its main text when you open the reader"
+        description: "Show a Read full text button in the reader; the article is downloaded only when clicked"
         checked: root.gazetteSettings.full_text !== false
         foreground: root.fg
         accent: root.accent

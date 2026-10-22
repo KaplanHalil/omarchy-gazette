@@ -110,6 +110,7 @@ BarWidget {
     function tabs(): void { if (panel) panel.openView("tabs") }
     function markets(): void { if (panel) panel.openView("markets") }
     function news(): void { if (panel) panel.openView("news") }
+    function readFullText(): void { if (panel) panel.revealSelectedText() }
     function tab(id: string): void {
       if (!panel) return
       panel.activeTab = id

@@ -368,26 +368,37 @@ fn article_text_command(id: &str, force: bool) -> Result<serde_json::Value, Stri
             return Ok(serde_json::json!({
                 "ok": true,
                 "id": id,
-                "text": text,
-                "chars": text.chars().count(),
+                "text": text.text,
+                "chars": text.text.chars().count(),
+                "blocks": text.blocks,
                 "cached": true,
             }));
         }
     }
     let store = config::load_store();
-    let url = store
+    let article = store
         .articles
         .iter()
         .find(|a| a.id == id)
-        .map(|a| a.url.clone())
         .ok_or_else(|| "article not found".to_string())?;
-    let text = article::fetch(&url)?;
-    let stored = texts::put(id, &text).is_ok();
+    let url = article.url.clone();
+    let exclude = article.image_url.clone();
+    let exclude_file = article.image_path.clone();
+    let extraction = article::fetch(&url, &exclude, &exclude_file)?;
+    let text = extraction.text;
+    let blocks = extraction.blocks;
+    let cached = texts::CachedText {
+        v: 2,
+        text: text.clone(),
+        blocks: blocks.clone(),
+    };
+    let stored = texts::put(id, &cached).is_ok();
     Ok(serde_json::json!({
         "ok": true,
         "id": id,
         "text": text,
         "chars": text.chars().count(),
+        "blocks": blocks,
         "cached": false,
         "stored": stored,
     }))

@@ -15,11 +15,13 @@ Item {
   property var article: null
   property bool showImages: true
   property string fullText: ""
+  property var fullTextBlocks: []
+  property bool fullTextRevealed: false
   property bool fullTextLoading: false
   property string fullTextError: ""
   property bool fullTextEnabled: true
 
-  readonly property bool usingFullText: fullText.length > 0
+  readonly property bool usingFullText: fullTextRevealed && fullText.length > 0
   readonly property string bodyText: {
     if (!article) return ""
     if (usingFullText) return fullText
@@ -28,6 +30,7 @@ Item {
   }
 
   signal backRequested()
+  signal loadFullTextRequested()
   signal reloadTextRequested()
   signal openExternalRequested(var article)
   signal toggleBookmarkRequested(var article)
@@ -38,9 +41,16 @@ Item {
   readonly property color dim: Qt.rgba(fg.r, fg.g, fg.b, 0.68)
   readonly property color dimmer: Qt.rgba(fg.r, fg.g, fg.b, 0.44)
   readonly property string fontFamily: Style.font.family
+  readonly property bool hasInlineImages: {
+    for (var i = 0; i < fullTextBlocks.length; i++) {
+      if (fullTextBlocks[i].type === "image") return true
+    }
+    return false
+  }
   readonly property bool hasImage: showImages
     && article !== null
     && String(article.imageFile || "").length > 0
+    && !(usingFullText && hasInlineImages)
 
   onArticleChanged: {
     readerFlick.contentY = 0
@@ -164,7 +174,63 @@ Item {
 
         RowLayout {
           width: parent.width
-          visible: root.fullTextEnabled
+          visible: root.fullTextEnabled && !root.fullTextRevealed && !root.fullTextLoading
+          spacing: Style.space(8)
+
+          BorderSurface {
+            implicitWidth: readFullRow.implicitWidth + Style.space(18)
+            implicitHeight: Style.space(30)
+            radius: Style.cornerRadius
+            color: readFullMouse.containsMouse ? Style.selectedFillFor(root.fg, root.accent) : "transparent"
+            borderSpec: Border.controlSpec(readFullMouse.containsMouse ? "selected" : "normal", root.accent, root.accent)
+
+            Row {
+              id: readFullRow
+              anchors.centerIn: parent
+              spacing: Style.space(7)
+
+              Text {
+                textFormat: Text.PlainText
+                text: "\uf06e"
+                color: root.accent
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+              }
+
+              Text {
+                textFormat: Text.PlainText
+                text: "READ FULL TEXT"
+                color: root.accent
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+                font.letterSpacing: 0.6
+              }
+            }
+
+            MouseArea {
+              id: readFullMouse
+              anchors.fill: parent
+              hoverEnabled: true
+              cursorShape: Qt.PointingHandCursor
+              onClicked: root.loadFullTextRequested()
+            }
+          }
+
+          Text {
+            Layout.fillWidth: true
+            textFormat: Text.PlainText
+            text: "downloads the publisher's article and photos"
+            color: root.dimmer
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.caption
+            elide: Text.ElideRight
+          }
+        }
+
+        RowLayout {
+          width: parent.width
+          visible: root.fullTextRevealed
             && (root.fullTextLoading || (root.fullTextError.length > 0 && !root.usingFullText))
           spacing: Style.space(6)
 
@@ -221,8 +287,74 @@ Item {
           font.letterSpacing: 0.8
         }
 
+        Column {
+          width: parent.width
+          spacing: Style.space(9)
+          visible: root.usingFullText && root.fullTextBlocks.length > 0
+
+          Repeater {
+            model: root.usingFullText ? root.fullTextBlocks : []
+
+            Column {
+              id: blockColumn
+              required property var modelData
+              width: parent.width
+              spacing: Style.space(4)
+
+              Text {
+                visible: blockColumn.modelData.type === "text"
+                width: parent.width
+                textFormat: Text.PlainText
+                text: blockColumn.modelData.type === "text" ? String(blockColumn.modelData.text || "") : ""
+                color: root.dim
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.body
+                wrapMode: Text.Wrap
+                lineHeight: 1.4
+              }
+
+              ClippingRectangle {
+                visible: blockColumn.modelData.type === "image"
+                  && String(blockColumn.modelData.file || "").length > 0
+                width: parent.width
+                height: Math.min(Style.space(260), width * 0.62)
+                radius: Style.cornerRadius
+                color: Qt.rgba(root.fg.r, root.fg.g, root.fg.b, 0.05)
+
+                Image {
+                  anchors.fill: parent
+                  source: blockColumn.modelData.type === "image"
+                    ? "file://" + String(blockColumn.modelData.file || "")
+                    : ""
+                  fillMode: Image.PreserveAspectFit
+                  asynchronous: true
+                  cache: true
+                  sourceSize.width: 1200
+                  sourceSize.height: 800
+                }
+              }
+
+              Text {
+                visible: blockColumn.modelData.type === "image"
+                  && String(blockColumn.modelData.caption || "").length > 0
+                width: parent.width
+                textFormat: Text.PlainText
+                text: blockColumn.modelData.type === "image"
+                  ? String(blockColumn.modelData.caption || "")
+                  : ""
+                color: root.dimmer
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                wrapMode: Text.Wrap
+                lineHeight: 1.25
+              }
+            }
+          }
+        }
+
         Text {
           width: parent.width
+          visible: !root.usingFullText || root.fullTextBlocks.length === 0
           textFormat: Text.PlainText
           text: root.bodyText
           color: root.dim

@@ -47,6 +47,7 @@ Panel {
   property var articleTexts: ({})
   property string articleTextLoading: ""
   property string articleTextError: ""
+  property string textOpenFor: ""
   property bool _textRunning: false
   property var _textCallback: null
   property var _textPending: null
@@ -432,6 +433,10 @@ Panel {
   }
 
   function handleReturn() {
+    if (view === "reader") {
+      if (!textOpenFor) revealSelectedText()
+      return
+    }
     if (view !== "news") return
     var list = filteredArticles()
     if (list.length === 0) return
@@ -481,23 +486,35 @@ Panel {
     selectedId = article.id
     view = "reader"
     articleTextError = ""
+    textOpenFor = ""
     if (!article.read) {
       runCommand(["--mark-read", article.id], function() { reload() })
-    }
-    if (gazetteSettings.full_text !== false && article.url && !articleTexts[article.id]) {
-      loadArticleText(article)
     }
   }
 
   function fullTextForSelected() {
-    if (!selectedId) return ""
-    return articleTexts[selectedId] || ""
+    if (!selectedId || !articleTexts[selectedId]) return ""
+    return String(articleTexts[selectedId].text || "")
+  }
+
+  function blocksForSelected() {
+    if (!selectedId || !articleTexts[selectedId]) return []
+    return articleTexts[selectedId].blocks || []
+  }
+
+  function revealSelectedText() {
+    var article = selectedArticle()
+    if (!article || textOpenFor === article.id) return
+    textOpenFor = article.id
+    articleTextError = ""
+    loadArticleText(article)
   }
 
   function loadArticleText(article, force) {
     if (!article || !article.id) return
     if (gazetteSettings.full_text === false) return
     if (!force && articleTexts[article.id]) return
+    if (!force && articleTextLoading === article.id) return
     if (!article.url) {
       articleTextError = "This article has no web URL."
       return
@@ -515,7 +532,10 @@ Panel {
       }
       var next = {}
       for (var key in root.articleTexts) next[key] = root.articleTexts[key]
-      next[article.id] = String(result.text || "")
+      next[article.id] = {
+        text: String(result.text || ""),
+        blocks: result.blocks || []
+      }
       root.articleTexts = next
     })
   }
@@ -772,10 +792,13 @@ Panel {
             panel: root
             showImages: root.gazetteSettings.show_images !== false
             fullText: root.fullTextForSelected()
+            fullTextBlocks: root.blocksForSelected()
+            fullTextRevealed: root.textOpenFor === root.selectedId
             fullTextLoading: root.articleTextLoading === root.selectedId
             fullTextError: root.articleTextError
             fullTextEnabled: root.gazetteSettings.full_text !== false
             onBackRequested: root.view = "news"
+            onLoadFullTextRequested: root.revealSelectedText()
             onReloadTextRequested: root.loadArticleText(root.selectedArticle(), true)
             onOpenExternalRequested: function(article) { root.openExternal(article) }
             onToggleBookmarkRequested: function(article) { root.toggleBookmarkSelected() }
