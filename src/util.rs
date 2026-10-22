@@ -227,10 +227,13 @@ pub fn http_get(
     Ok((bytes, etag, lm))
 }
 
-/// Simple advisory lock so the 5-minute timer and a manual refresh cannot write
-/// state concurrently. A stale lock older than two minutes is stolen.
+/// Simple advisory lock so the 5-minute timer, another monitor's widget and a
+/// manual refresh cannot write state concurrently. The PID is stored in the
+/// file: a lock left behind by a killed shell is reclaimed immediately, and a
+/// live holder gets a short grace period instead of an instant error.
 pub struct LockGuard {
     path: PathBuf,
+    pid: u32,
 }
 
 impl LockGuard {
@@ -238,30 +241,59 @@ impl LockGuard {
         let dir = state_dir();
         ensure_dir(&dir)?;
         let path = dir.join("engine.lock");
-        if let Ok(md) = fs::metadata(&path) {
-            if let Ok(modified) = md.modified() {
-                if let Ok(age) = modified.elapsed() {
-                    if age.as_secs() < 300 {
+        let pid = std::process::id();
+        let deadline = std::time::Instant::now() + Duration::from_secs(10);
+
+        loop {
+            match fs::OpenOptions::new()
+                .create_new(true)
+                .write(true)
+                .mode(0o600)
+                .open(&path)
+            {
+                Ok(mut file) => {
+                    let _ = write!(file, "{}", pid);
+                    return Ok(LockGuard { path, pid });
+                }
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+                    let owner = fs::read_to_string(&path)
+                        .ok()
+                        .and_then(|raw| raw.trim().parse::<u32>().ok())
+                        .unwrap_or(0);
+                    let alive = owner > 0 && Path::new(&format!("/proc/{}", owner)).exists();
+                    let age = fs::metadata(&path)
+                        .and_then(|md| md.modified())
+                        .ok()
+                        .and_then(|modified| modified.elapsed().ok())
+                        .map(|age| age.as_secs())
+                        .unwrap_or(u64::MAX);
+
+                    // Dead owner, or a live process that has been holding the
+                    // lock for far longer than any refresh should take.
+                    if !alive || age >= 300 {
+                        let _ = fs::remove_file(&path);
+                        continue;
+                    }
+                    if std::time::Instant::now() >= deadline {
                         return Err("another pulse-engine operation is running".into());
                     }
+                    std::thread::sleep(Duration::from_millis(200));
                 }
+                Err(error) => return Err(format!("could not acquire lock: {}", error)),
             }
-            let _ = fs::remove_file(&path);
         }
-        let mut file = fs::OpenOptions::new()
-            .create_new(true)
-            .write(true)
-            .mode(0o600)
-            .open(&path)
-            .map_err(|e| format!("could not acquire lock: {}", e))?;
-        let _ = write!(file, "{}", std::process::id());
-        Ok(LockGuard { path })
     }
 }
 
 impl Drop for LockGuard {
     fn drop(&mut self) {
-        let _ = fs::remove_file(&self.path);
+        // Never delete a lock that another process has taken over.
+        let owner = fs::read_to_string(&self.path)
+            .ok()
+            .and_then(|raw| raw.trim().parse::<u32>().ok());
+        if owner == Some(self.pid) {
+            let _ = fs::remove_file(&self.path);
+        }
     }
 }
 
