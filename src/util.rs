@@ -150,21 +150,37 @@ pub fn first_img_src(html: &str) -> Option<String> {
 }
 
 pub fn attr_value(tag: &str, wanted: &str) -> Option<String> {
-    let inner = tag
-        .trim_start_matches('<')
-        .trim_start_matches(|c: char| c.is_ascii_alphabetic())
-        .trim_end_matches('>')
-        .trim_end_matches('/');
-    for token in inner.split_whitespace() {
-        let Some((name, value)) = token.split_once('=') else {
+    let lower = tag.to_ascii_lowercase();
+    let wanted_lower = wanted.to_ascii_lowercase();
+    let mut search = 0usize;
+    while let Some(relative) = lower[search..].find(&wanted_lower) {
+        let index = search + relative;
+        let boundary_ok = tag[..index]
+            .chars()
+            .next_back()
+            .map(|c| !(c.is_ascii_alphanumeric() || c == '-' || c == '_'))
+            .unwrap_or(true);
+        if !boundary_ok {
+            search = index + wanted_lower.len();
+            continue;
+        }
+        let rest = tag[index + wanted_lower.len()..].trim_start();
+        let Some(rest) = rest.strip_prefix('=') else {
+            search = index + wanted_lower.len();
             continue;
         };
-        if name.eq_ignore_ascii_case(wanted) {
-            let trimmed = value.trim_matches(|c| c == '"' || c == '\'');
-            if !trimmed.is_empty() {
-                return Some(trimmed.to_string());
-            }
+        let rest = rest.trim_start();
+        let mut chars = rest.chars();
+        let first = chars.next()?;
+        if first == '"' || first == '\'' {
+            let quote = first;
+            let value = &rest[1..];
+            return value.find(quote).map(|end| value[..end].to_string());
         }
+        return rest
+            .split_whitespace()
+            .next()
+            .map(|value| value.trim_end_matches('/').to_string());
     }
     None
 }

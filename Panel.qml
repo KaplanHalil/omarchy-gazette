@@ -41,8 +41,12 @@ Panel {
   property bool refreshing: false
   property bool loading: false
   property bool _busy: false
+  property bool _quiet: false
   property var _queue: []
   property var _callback: null
+  property var articleTexts: ({})
+  property string articleTextLoading: ""
+  property string articleTextError: ""
 
   readonly property var gazetteSettings: snapshot.settings || ({})
   readonly property var allArticles: snapshot.articles || []
@@ -87,10 +91,10 @@ Panel {
 
   // ------------------------------------------------------------------ engine
 
-  function runCommand(args, callback) {
+  function runCommand(args, callback, quiet) {
     var list = []
     for (var i = 0; i < args.length; i++) list.push(String(args[i]))
-    _queue.push({ args: list, callback: callback || null })
+    _queue.push({ args: list, callback: callback || null, quiet: quiet === true })
     pump()
   }
 
@@ -98,6 +102,7 @@ Panel {
     if (_busy || _queue.length === 0) return
     var job = _queue.shift()
     _callback = job.callback
+    _quiet = job.quiet === true
     _busy = true
     cmdProc.command = [enginePath].concat(job.args)
     cmdProc.running = true
@@ -119,8 +124,8 @@ Panel {
         else if (errText.trim().length > 0) message = errText.trim()
         else if (text.trim().length > 0) message = text.trim()
         else message = "engine exited with code " + code
-        root.engineError = message
-      } else {
+        if (!root._quiet) root.engineError = message
+      } else if (!root._quiet) {
         root.engineError = ""
       }
       root._busy = false
@@ -427,9 +432,44 @@ Panel {
     if (!article) return
     selectedId = article.id
     view = "reader"
+    articleTextError = ""
     if (!article.read) {
       runCommand(["--mark-read", article.id], function() { reload() })
     }
+    if (gazetteSettings.full_text !== false && article.url && !articleTexts[article.id]) {
+      loadArticleText(article)
+    }
+  }
+
+  function fullTextForSelected() {
+    if (!selectedId) return ""
+    return articleTexts[selectedId] || ""
+  }
+
+  function loadArticleText(article, force) {
+    if (!article || !article.id) return
+    if (gazetteSettings.full_text === false) return
+    if (!force && articleTexts[article.id]) return
+    if (!article.url) {
+      articleTextError = "This article has no web URL."
+      return
+    }
+    articleTextLoading = article.id
+    articleTextError = ""
+    var command = force ? "--refresh-text" : "--article-text"
+    runCommand([command, article.id], function(result, code, errorText) {
+      if (root.articleTextLoading === article.id) root.articleTextLoading = ""
+      if (!result || result.ok === false) {
+        if (root.selectedId === article.id) {
+          root.articleTextError = errorText || "Full text could not be fetched."
+        }
+        return
+      }
+      var next = {}
+      for (var key in root.articleTexts) next[key] = root.articleTexts[key]
+      next[article.id] = String(result.text || "")
+      root.articleTexts = next
+    }, true)
   }
 
   function openExternal(article) {
@@ -683,7 +723,12 @@ Panel {
             article: root.selectedArticle()
             panel: root
             showImages: root.gazetteSettings.show_images !== false
+            fullText: root.fullTextForSelected()
+            fullTextLoading: root.articleTextLoading === root.selectedId
+            fullTextError: root.articleTextError
+            fullTextEnabled: root.gazetteSettings.full_text !== false
             onBackRequested: root.view = "news"
+            onReloadTextRequested: root.loadArticleText(root.selectedArticle(), true)
             onOpenExternalRequested: function(article) { root.openExternal(article) }
             onToggleBookmarkRequested: function(article) { root.toggleBookmarkSelected() }
             onToggleReadRequested: function(article) {

@@ -85,6 +85,17 @@ Item {
         onClicked: root.save({ show_excerpts: !(root.gazetteSettings.show_excerpts !== false) })
       }
 
+      Toggle {
+        width: parent.width
+        label: "Full article text"
+        description: "Fetch the article page and extract its main text when you open the reader"
+        checked: root.gazetteSettings.full_text !== false
+        foreground: root.fg
+        accent: root.accent
+        fontFamily: root.fontFamily
+        onClicked: root.save({ full_text: !(root.gazetteSettings.full_text !== false) })
+      }
+
       RowLayout {
         width: parent.width
         spacing: Style.space(6)

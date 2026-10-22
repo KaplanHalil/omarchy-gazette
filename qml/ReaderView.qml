@@ -14,8 +14,21 @@ Item {
   property var panel: null
   property var article: null
   property bool showImages: true
+  property string fullText: ""
+  property bool fullTextLoading: false
+  property string fullTextError: ""
+  property bool fullTextEnabled: true
+
+  readonly property bool usingFullText: fullText.length > 0
+  readonly property string bodyText: {
+    if (!article) return ""
+    if (usingFullText) return fullText
+    var content = String(article.content || "")
+    return content.length > 0 ? content : String(article.summary || "")
+  }
 
   signal backRequested()
+  signal reloadTextRequested()
   signal openExternalRequested(var article)
   signal toggleBookmarkRequested(var article)
   signal toggleReadRequested(var article)
@@ -28,6 +41,10 @@ Item {
   readonly property bool hasImage: showImages
     && article !== null
     && String(article.imageFile || "").length > 0
+
+  onArticleChanged: {
+    readerFlick.contentY = 0
+  }
 
   function scrollBy(steps) {
     readerFlick.contentY = Math.max(
@@ -145,14 +162,69 @@ Item {
 
         PanelSeparator { width: parent.width; visible: root.hasImage }
 
+        RowLayout {
+          width: parent.width
+          visible: root.fullTextEnabled
+            && (root.fullTextLoading || (root.fullTextError.length > 0 && !root.usingFullText))
+          spacing: Style.space(6)
+
+          Text {
+            Layout.fillWidth: true
+            textFormat: Text.PlainText
+            text: root.fullTextLoading
+              ? "\uf021  fetching full article…"
+              : "\uf071  full text unavailable — showing the feed summary"
+            color: root.fullTextLoading ? root.dimmer : root.dim
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.caption
+            elide: Text.ElideRight
+          }
+
+          BorderSurface {
+            visible: !root.fullTextLoading
+            implicitWidth: retryLabel.implicitWidth + Style.space(14)
+            implicitHeight: Style.space(22)
+            radius: Style.cornerRadius
+            color: retryMouse.containsMouse ? Style.hoverFillFor(root.fg, root.accent) : "transparent"
+            borderSpec: Border.controlSpec("normal", root.accent, root.accent)
+
+            Text {
+              id: retryLabel
+              anchors.centerIn: parent
+              textFormat: Text.PlainText
+              text: "RETRY"
+              color: root.accent
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              font.bold: true
+            }
+
+            MouseArea {
+              id: retryMouse
+              anchors.fill: parent
+              hoverEnabled: true
+              cursorShape: Qt.PointingHandCursor
+              onClicked: root.reloadTextRequested()
+            }
+          }
+        }
+
+        Text {
+          visible: root.usingFullText
+          width: parent.width
+          textFormat: Text.PlainText
+          text: "FULL TEXT"
+          color: root.accent
+          font.family: root.fontFamily
+          font.pixelSize: Style.font.caption
+          font.bold: true
+          font.letterSpacing: 0.8
+        }
+
         Text {
           width: parent.width
           textFormat: Text.PlainText
-          text: root.article
-            ? (String(root.article.content || "").length > 0
-              ? String(root.article.content)
-              : String(root.article.summary || ""))
-            : ""
+          text: root.bodyText
           color: root.dim
           font.family: root.fontFamily
           font.pixelSize: Style.font.body

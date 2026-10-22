@@ -3,6 +3,7 @@
 //! Every command prints JSON on stdout (except `--status`/`--help`), so the
 //! Quickshell UI can call one binary and parse the result.
 
+mod article;
 mod config;
 mod feeds;
 mod images;
@@ -49,6 +50,7 @@ enum Cmd {
     SeedStarter,
     AckNotifications,
     ArticleImage(String),
+    ArticleText(String, bool),
     Status,
     Clean,
     Version,
@@ -305,6 +307,17 @@ fn run() -> i32 {
             let path = feeds::fetch_article_image(store, &id)?;
             config::save_store(store)?;
             Ok(serde_json::json!({"ok": true, "path": path}))
+        }),
+        Cmd::ArticleText(id, force) => with_state(|_config, store, _lock| {
+            let (text, cached) = article::ensure_text(store, &id, force)?;
+            config::save_store(store)?;
+            Ok(serde_json::json!({
+                "ok": true,
+                "id": id,
+                "text": text,
+                "chars": text.chars().count(),
+                "cached": cached,
+            }))
         }),
         Cmd::Clean => with_state(|config, store, _lock| {
             let referenced: std::collections::HashSet<String> = store
@@ -568,6 +581,14 @@ fn parse_args() -> Result<Opts, String> {
                 i += 1;
                 opts.command = Cmd::ArticleImage(require(&args, i, "--image")?);
             }
+            "--article-text" => {
+                i += 1;
+                opts.command = Cmd::ArticleText(require(&args, i, "--article-text")?, false);
+            }
+            "--refresh-text" => {
+                i += 1;
+                opts.command = Cmd::ArticleText(require(&args, i, "--refresh-text")?, true);
+            }
             "--clean" => opts.command = Cmd::Clean,
             "--status" => opts.command = Cmd::Status,
             "--version" | "-v" => opts.command = Cmd::Version,
@@ -619,6 +640,8 @@ Usage:
   gazette-engine --mark-all-read [--tab <id>]
   gazette-engine --bookmark <id> <0|1>
   gazette-engine --image <article-id>       Cache one article image
+  gazette-engine --article-text <id>        Fetch/extract the full article text
+  gazette-engine --refresh-text <id>        Re-fetch the full text (ignore cache)
   gazette-engine --add-feed <url> [--title <name>] [--tabs a,b]
   gazette-engine --remove-feed <id>
   gazette-engine --toggle-feed <id>

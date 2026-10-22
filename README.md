@@ -40,7 +40,9 @@ Tested on **Omarchy 4.0.6** with **Quickshell 0.3.2** and **Rust 1.99**.
 
 ### The rest
 - Full-text search across headlines, summaries and feed names.
-- In-panel reader with the article body converted to **plain text** (no remote markup is rendered).
+- In-panel reader with **on-demand full article text**. Feed HTML is never rendered: the engine strips it to plain paragraphs before it reaches QML.
+- If a page cannot be read (paywall, 405, blocked network), Gazette falls back to the feed's summary and offers a retry instead of showing an empty page.
+- Full text is cached in local state after the first fetch, so reopening an article is instant and offline-friendly.
 - Bookmarks, read/unread, mark-all-read, feed enable/disable and health errors.
 - Desktop notification summaries for new unread articles, with minimum interval and quiet hours.
 - OPML import/export; paste a site homepage and Gazette discovers its feed.
@@ -160,6 +162,8 @@ gazette-engine --mark-unread <id>
 gazette-engine --mark-all-read [--tab <id>]
 gazette-engine --bookmark <id> <0|1>
 gazette-engine --image <article-id>
+gazette-engine --article-text <id>        # fetch + extract full article text (cached)
+gazette-engine --refresh-text <id>        # ignore the cache and re-extract
 gazette-engine --add-feed <url> [--title <name>] [--tabs a,b]
 gazette-engine --remove-feed <id>
 gazette-engine --toggle-feed <id>
@@ -213,6 +217,7 @@ A tab in `config.json`:
 
 - State stays on the machine. No analytics, no accounts, no cloud service.
 - Feed and article HTML is reduced to plain text before it reaches QML; every dynamic `Text` uses `Text.PlainText`.
+- Full article pages are fetched **only when you open an article**, only when the setting is enabled, capped at 2 MB, and cached locally. No JavaScript is executed.
 - HTTP(S) only, hard byte caps (6 MB feeds, 3 MB images, 768 KB for `og:image` pages), connect/read timeouts, no `data:` or `file:` fetches.
 - Images are identified by magic bytes, not by the server's `Content-Type`, and SVG is rejected.
 - Symlinked state/cache paths are refused; temp files are renamed into place.
@@ -253,7 +258,7 @@ install.sh           cargo build + install engine
 ```
 
 ```bash
-cargo test                 # 21 parser/market/OPML/text tests
+cargo test                 # 27 parser/market/article/OPML/text tests
 cargo build --release
 omarchy plugin validate .
 ```

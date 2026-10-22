@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub const CONFIG_VERSION: u32 = 1;
-pub const VERSION: &str = "1.0.0";
+pub const VERSION: &str = "1.1.0";
 
 fn default_refresh_minutes() -> u32 {
     5
@@ -65,6 +65,7 @@ pub struct Settings {
     pub show_images: bool,
     pub thumbnails: bool,
     pub show_excerpts: bool,
+    pub full_text: bool,
     pub density: String,
     pub bar_ticker: bool,
     pub bar_ticker_id: String,
@@ -84,6 +85,7 @@ impl Default for Settings {
             show_images: true,
             thumbnails: true,
             show_excerpts: true,
+            full_text: true,
             density: "comfortable".into(),
             bar_ticker: false,
             bar_ticker_id: default_bar_ticker(),
@@ -339,6 +341,10 @@ pub struct Article {
     pub image_path: String,
     pub read: bool,
     pub bookmarked: bool,
+    #[serde(default)]
+    pub full_text: String,
+    #[serde(default)]
+    pub full_text_at: i64,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
