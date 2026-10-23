@@ -1,6 +1,6 @@
 [package]
 name = "gazette-engine"
-version = "1.2.0"
+version = "1.2.1"
 edition = "2021"
 description = "Local-first RSS/Atom engine with market data for the Omarchy Gazette bar widget"
 license = "MIT"

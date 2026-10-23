@@ -1,5 +1,7 @@
 # Gazette
 
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-ffdd00?style=flat-square&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/kaplanhalil)
+
 **A local-first RSS/Atom reader with a live markets ticker, custom tabs and article thumbnails — built for [Omarchy](https://omarchy.org/).**
 
 Gazette lives in the Omarchy bar. Click the RSS icon (or press `Super+Ctrl+W` if you bind it) and a keyboard-driven panel opens with four markets pinned at the top, your own news tabs, thumbnails from the feeds, and an in-panel reader.
@@ -248,6 +250,12 @@ Third-party endpoints: Yahoo Finance, TCMB, open.er-api.com, plus your own feeds
 Logs: `journalctl --user -b | grep -i gazette`.
 
 ---
+
+## Support
+
+If Gazette is useful to you, you can buy me a coffee:
+
+[Buy Me a Coffee](https://buymeacoffee.com/kaplanhalil)
 
 ## Development
 

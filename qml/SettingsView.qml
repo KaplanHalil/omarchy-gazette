@@ -14,6 +14,7 @@ Item {
   property var stats: ({})
   property var paths: ({})
   property string version: "1.0.0"
+  readonly property string coffeeUrl: "https://buymeacoffee.com/kaplanhalil"
 
   signal changed()
   signal refreshRequested()
@@ -429,6 +430,52 @@ Item {
         font.pixelSize: Style.font.caption
         lineHeight: 1.35
         wrapMode: Text.WrapAnywhere
+      }
+
+      PanelSeparator { width: parent.width }
+
+      PanelSectionHeader {
+        width: parent.width
+        text: "SUPPORT"
+        foreground: root.fg
+        fontFamily: root.fontFamily
+      }
+
+      Text {
+        width: parent.width
+        textFormat: Text.PlainText
+        text: "Gazette is free and local-first. If it is useful to you, you can buy me a coffee."
+        color: root.dim
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.caption
+        wrapMode: Text.Wrap
+      }
+
+      BorderSurface {
+        implicitWidth: coffeeLabel.implicitWidth + Style.space(18)
+        implicitHeight: Style.space(28)
+        radius: Style.cornerRadius
+        color: coffeeMouse.containsMouse ? Style.selectedFillFor(root.fg, root.accent) : "transparent"
+        borderSpec: Border.controlSpec("normal", root.accent, root.accent)
+
+        Text {
+          id: coffeeLabel
+          anchors.centerIn: parent
+          textFormat: Text.PlainText
+          text: "BUY ME A COFFEE"
+          color: root.accent
+          font.family: root.fontFamily
+          font.pixelSize: Style.font.caption
+          font.bold: true
+        }
+
+        MouseArea {
+          id: coffeeMouse
+          anchors.fill: parent
+          hoverEnabled: true
+          cursorShape: Qt.PointingHandCursor
+          onClicked: Qt.openUrlExternally(root.coffeeUrl)
+        }
       }
 
       Item { width: 1; height: Style.space(6) }
