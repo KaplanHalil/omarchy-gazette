@@ -16,7 +16,7 @@ mod util;
 
 use crate::model::{Config, MarketCfg, Pending, Settings, Store, TabCfg};
 use crate::util::{atomic_write, home, now, split_list, LockGuard};
-use std::io::Write;
+use std::io::{BufRead, Write};
 
 #[derive(Default)]
 struct Opts {
@@ -144,9 +144,12 @@ fn run() -> i32 {
             config::save_store(store)?;
             Ok(ok())
         }),
-        Cmd::AddFeed(url) => {
-            with_state(|config, _store, _lock| add_feed(config, &url, &opts.title, &opts.tabs))
-        }
+        Cmd::AddFeed(url) => match add_feed_url(&url) {
+            Ok(url) => {
+                with_state(|config, _store, _lock| add_feed(config, &url, &opts.title, &opts.tabs))
+            }
+            Err(error) => Err(error),
+        },
         Cmd::RemoveFeed(id) => with_state(|config, store, _lock| {
             let before = config.feeds.len();
             config.feeds.retain(|f| f.id != id);
@@ -667,6 +670,28 @@ fn require(args: &[String], index: usize, flag: &str) -> Result<String, String> 
         .ok_or_else(|| format!("{} needs a value", flag))
 }
 
+/// Resolve `--add-feed`. A literal `-` means "read the URL from stdin", which
+/// keeps private feed tokens out of argv (and therefore out of the
+/// world-readable `/proc/<pid>/cmdline`).
+fn add_feed_url(value: &str) -> Result<String, String> {
+    read_add_feed_url(value, &mut std::io::stdin().lock())
+}
+
+fn read_add_feed_url(value: &str, stdin: &mut impl BufRead) -> Result<String, String> {
+    if value != "-" {
+        return Ok(value.to_string());
+    }
+    let mut line = String::new();
+    stdin
+        .read_line(&mut line)
+        .map_err(|e| format!("could not read feed URL from stdin: {}", e))?;
+    let line = line.trim();
+    if line.is_empty() {
+        return Err("feed URL is required on stdin".into());
+    }
+    Ok(line.to_string())
+}
+
 fn print_help() {
     println!(
         "\
@@ -684,7 +709,8 @@ Usage:
   gazette-engine --image <article-id>       Cache one article image
   gazette-engine --article-text <id>        Fetch/extract the full article text
   gazette-engine --refresh-text <id>        Re-fetch the full text (ignore cache)
-  gazette-engine --add-feed <url> [--title <name>] [--tabs a,b]
+  gazette-engine --add-feed <url|-> [--title <name>] [--tabs a,b]
+                                             (- reads the URL from stdin)
   gazette-engine --remove-feed <id>
   gazette-engine --toggle-feed <id>
   gazette-engine --save-tab '<json>'
@@ -702,4 +728,46 @@ State lives in ~/.local/state/omarchy/gazette; images in
 ~/.cache/omarchy/gazette/images.",
         model::VERSION
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::read_add_feed_url;
+    use std::io::Cursor;
+
+    #[test]
+    fn add_feed_url_keeps_a_literal_argument() {
+        let mut stdin = Cursor::new("");
+        assert_eq!(
+            read_add_feed_url("https://example.com/feed", &mut stdin).unwrap(),
+            "https://example.com/feed"
+        );
+    }
+
+    #[test]
+    fn add_feed_url_reads_stdin_for_dash() {
+        let mut stdin = Cursor::new("https://example.com/private?token=secret\n");
+        assert_eq!(
+            read_add_feed_url("-", &mut stdin).unwrap(),
+            "https://example.com/private?token=secret"
+        );
+    }
+
+    #[test]
+    fn add_feed_url_trims_stdin_and_ignores_extra_lines() {
+        let mut stdin = Cursor::new("  https://example.com/feed  \nhttps://example.com/other\n");
+        assert_eq!(
+            read_add_feed_url("-", &mut stdin).unwrap(),
+            "https://example.com/feed"
+        );
+    }
+
+    #[test]
+    fn add_feed_url_rejects_empty_stdin() {
+        let mut stdin = Cursor::new("   \n");
+        assert_eq!(
+            read_add_feed_url("-", &mut stdin).unwrap_err(),
+            "feed URL is required on stdin"
+        );
+    }
 }

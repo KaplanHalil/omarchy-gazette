@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub const CONFIG_VERSION: u32 = 1;
-pub const VERSION: &str = "1.2.0";
+pub const VERSION: &str = "1.2.2";
 
 fn default_refresh_minutes() -> u32 {
     5

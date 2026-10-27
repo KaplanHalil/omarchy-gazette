@@ -167,7 +167,7 @@ gazette-engine --bookmark <id> <0|1>
 gazette-engine --image <article-id>
 gazette-engine --article-text <id>        # fetch + extract full article text (cached)
 gazette-engine --refresh-text <id>        # ignore the cache and re-extract
-gazette-engine --add-feed <url> [--title <name>] [--tabs a,b]
+gazette-engine --add-feed <url|-> [--title <name>] [--tabs a,b]  # "-" reads stdin
 gazette-engine --remove-feed <id>
 gazette-engine --toggle-feed <id>
 gazette-engine --save-tab '<json>'
@@ -180,6 +180,14 @@ gazette-engine --export-opml [path]
 gazette-engine --seed-starter
 gazette-engine --ack-notifications
 gazette-engine --clean
+```
+
+Private feeds: the panel sends the feed URL over stdin (`--add-feed -`), never
+in argv, so a URL containing an access token cannot be read from the process
+list by another local account. For scripts with private feeds, use:
+
+```bash
+printf '%s\n' "$URL" | gazette-engine --add-feed -
 ```
 
 All commands print JSON (`{"ok":true,…}` or `{"ok":false,"error":"…"}`) except `--status`, `--help` and `--version`. A lock prevents the timer and a manual refresh from writing state at the same time.
@@ -220,6 +228,7 @@ A tab in `config.json`:
 ## Security & privacy
 
 - State stays on the machine. No analytics, no accounts, no cloud service.
+- Feed URLs can contain private access tokens. The panel passes them to the engine over stdin, never in argv, so they do not appear in `/proc/<pid>/cmdline`.
 - Feed and article HTML is reduced to plain text before it reaches QML; every dynamic `Text` uses `Text.PlainText`.
 - Full article pages are fetched **only after you click READ FULL TEXT**, only when the setting is enabled, capped at 2 MB, and cached locally in `~/.local/state/omarchy/gazette/texts/` (mode `0600`). Up to 8 inline photos per article are fetched through the same capped image cache. No JavaScript is executed.
 - HTTP(S) only, hard byte caps (6 MB feeds, 3 MB images, 768 KB for `og:image` pages), connect/read timeouts, no `data:` or `file:` fetches.

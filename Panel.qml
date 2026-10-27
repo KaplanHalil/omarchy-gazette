@@ -95,10 +95,14 @@ Panel {
 
   // ------------------------------------------------------------------ engine
 
-  function runCommand(args, callback, quiet) {
+  // stdinText is optional and is delivered to the engine over stdin. Use it
+  // for values that must never appear in argv: /proc/<pid>/cmdline is
+  // world-readable, so private feed URLs and their tokens go through stdin.
+  function runCommand(args, callback, quiet, stdinText) {
     var list = []
     for (var i = 0; i < args.length; i++) list.push(String(args[i]))
-    _queue.push({ args: list, callback: callback || null, quiet: quiet === true })
+    var input = stdinText === undefined || stdinText === null ? null : String(stdinText)
+    _queue.push({ args: list, callback: callback || null, quiet: quiet === true, stdinText: input })
     pump()
   }
 
@@ -108,14 +112,25 @@ Panel {
     _callback = job.callback
     _quiet = job.quiet === true
     _busy = true
+    cmdProc.stdinEnabled = job.stdinText !== null
+    cmdProc.stdinText = job.stdinText === null ? "" : job.stdinText + "\n"
     cmdProc.command = [enginePath].concat(job.args)
     cmdProc.running = true
   }
 
   Process {
     id: cmdProc
+    property string stdinText: ""
+    stdinEnabled: false
     stdout: StdioCollector { id: cmdOut; waitForEnd: true }
     stderr: StdioCollector { id: cmdErr; waitForEnd: true }
+
+    onStarted: {
+      if (stdinText.length > 0) {
+        write(stdinText)
+        stdinText = ""
+      }
+    }
 
     onExited: function(code, status) {
       var text = cmdOut.text || ""

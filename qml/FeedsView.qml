@@ -73,7 +73,9 @@ Item {
       showMessage("Paste a feed URL or a site homepage.", true)
       return
     }
-    var args = ["--add-feed", url]
+    // Feed URLs can carry private access tokens. Send the URL over stdin so
+    // it never appears in the engine's argv or /proc/<pid>/cmdline.
+    var args = ["--add-feed", "-"]
     var ids = selectedTabIds()
     if (ids.length > 0) args.push("--tabs", ids.join(","))
     showMessage("Adding feed…", false)
@@ -88,7 +90,7 @@ Item {
       selectedTabs = ({})
       root.changed()
       root.refreshRequested()
-    })
+    }, false, url)
   }
 
   function removeFeed(id) {

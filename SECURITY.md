@@ -11,6 +11,10 @@ telemetry.
   200 MB. They are identified by magic bytes; SVG is rejected.
 - The panel renders feed content as `Text.PlainText`. Feed HTML is reduced to
   text by the engine before it reaches QML.
+- Feed URLs can contain private access tokens. The panel passes the URL to the
+  engine over stdin (`--add-feed -`), never in argv, so another local account
+  cannot read it from `/proc/<pid>/cmdline` while the feed is added. The URL is
+  stored only in `config.json` (mode `0600`).
 
 ## Network
 
