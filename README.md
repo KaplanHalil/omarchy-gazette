@@ -6,9 +6,9 @@
 
 Gazette lives in the Omarchy bar. Click the RSS icon (or press `Super+Ctrl+W` if you bind it) and a keyboard-driven panel opens with four markets pinned at the top, your own news tabs, thumbnails from the feeds, and an in-panel reader.
 
-![Gazette](preview.png)
+![Gazette in the Omarchy bar: markets ticker, tabs and the AI feed with thumbnails](preview.png)
 
-![Reader](preview-reader.png)
+![The in-panel reader showing the full text of an article](preview-reader.png)
 
 Tested on **Omarchy 4.0.6** with **Quickshell 0.3.2** and **Rust 1.99**.
 

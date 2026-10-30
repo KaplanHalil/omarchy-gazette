@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.kaplanhalil.gazette",
   "name": "Gazette",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "author": "Halil Kaplan",
   "license": "MIT",
   "description": "Local-first RSS/Atom reader with a live markets ticker, custom tabs, article thumbnails and an in-panel reader for Omarchy.",
